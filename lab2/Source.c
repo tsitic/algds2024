@@ -112,6 +112,92 @@ void printTreap(struct treaps* root, int k) {
     printTreap(root->left, k + 1);
 }
 
+
+int compTreaps(struct treaps* first, struct treaps* second) {
+    if (first == NULL && second == NULL) {
+        return 1;
+    }
+    if (first == NULL || second == NULL) {
+        return 0;
+    }
+    if (first->key != second->key) {
+        return 0;
+    }
+    if (compTreaps(first->left, second->left) && compTreaps(first->right, second->right)) {
+        return 1;
+    }
+    return 0;
+}
+
+
+
+void testing() {
+    struct TestCase {
+        struct treaps* tree;
+        int key;
+        char* description;
+        struct treaps* afterdel;
+        struct treaps* afteradd;
+    };
+
+    struct TestCase tests[] = {
+        {NULL, 10, "Дерево без элементов",NULL, newNode(10)},
+        {newNode(5), 5, "Дерево с одним элементом",NULL, newNode(5)},
+        {insert(newNode(5),10),10,"Дерево с двумя элементами",newNode(5),insert(newNode(5),10)},
+        {insert(insert(newNode(5), 3), 7), 5, "Дерево с тремя элементами",insert(newNode(3),7),insert(insert(newNode(5), 3), 7)},
+    };
+
+    int numTests = sizeof(tests) / sizeof(tests[0]);
+
+    printf("Начало тестирования:\n");
+
+    for (int i = 0; i < numTests; ++i) {
+        printf("\nТест %d: %s\n", i + 1, tests[i].description);
+
+        // Удаление 
+        if (tests[i].tree) {
+            printf("Удаление элемента: ", tests[i].key);
+            tests[i].tree = delNode(tests[i].tree, tests[i].key);
+            if (compTreaps(tests[i].tree,tests[i].afterdel)) {
+                printf("успешно\n");
+            }
+            else {printf("неуспешно\n"); }
+        }
+
+        // Вставка
+        printf("Добавление элемента: ", tests[i].key);
+        tests[i].tree = insert(tests[i].tree, tests[i].key);
+        if (compTreaps(tests[i].tree,tests[i].afteradd)) {
+            printf("успешно\n");
+        }
+        else {
+            printf("неуспешно\n");
+        }
+
+        struct treaps* left = NULL;
+        struct treaps* right = NULL;
+        split(tests[i].tree, tests[i].key, &left, &right);
+        if (i == 0) {
+            printf("Сцепление и расцепление невозможно\n");
+            continue;
+        }
+        if (/*left && right*/ compTreaps(join(left,right),tests[i].afteradd)) {
+            printf("Расцепление успешно\n");
+            printf("Сцепление успешно\n");
+        }
+        else {
+            printf("Расцепление неуспешно\n");
+            printf("Сцепление неуспешно\n");
+        }
+    }
+
+    printf("\nДЛЯ ДЕРЕВА С ТРЕМЯ ЭЛЕМЕНТАМИ РАБОТАЕТ НЕ ВСЕГДА ТАК КАК ПРИОРИТЕТ ЗАДАЁТСЯ СЛУЧАЙНО\n И ДАЖЕ ЕСЛИ ЕГО ПРЕДСКАЗЫВАТЬ, ТО ВСЁ РАВНО В ВИДУ ТОГО ЧТО ТЕСТЫ ДЛЯ СРАВНЕНИЯ СОЗДАЮТСЯ ПОСЛЕ СОЗДАНИЯ ДЕРЕВА\n ПРИОРИТЕТ МОЖЕТ ОТЛИЧАТЬСЯ\n");
+    printf("\nТестирование завершено.\n");
+}
+
+
+
+
 int main() {
     setlocale(LC_CTYPE, "Russian");
     srand(time(NULL));
@@ -125,32 +211,33 @@ int main() {
     root = insert(root, 60);
     root = insert(root, 80);
 
-    printf("������ ����� �������:\n\n");
+    printf("Дерево после вставок:\n\n");
     printTreap(root, 0);
 
-    printf("\n\n������� ������� � ������ 20\n\n");
+    printf("\n\nУдаляем элемент с ключом 20\n\n");
     root = delNode(root, 20);
 
-    printf("\n������ ����� ��������:\n\n");
+    printf("\nДерево после удаления:\n\n");
     printTreap(root, 0);
 
     struct treaps* left = NULL;
     struct treaps* right = NULL;
 
-    printf("\n\n���������� ������ �� ����� 40\n\n");
+    printf("\n\nРасцепляем дерево по ключу 40\n\n");
     split(root, 40, &left, &right);
 
-    printf("\n\n\n����� ������:\n");
+    printf("\n\n\nЛевое дерево:\n");
     printTreap(left, 0);
 
-    printf("\n\n\n������ ������:\n");
+    printf("\n\n\nПравое дерево:\n");
     printTreap(right, 0);
 
-    printf("\n\n�������� ����� � ������ �������\n\n");
+    printf("\n\nСцепляем левое и правое деревья\n\n");
     root = join(left, right);
 
-    printf("\n\n������ ����� ���������:\\n");
+    printf("\n\nДерево после сцепления:\\n");
     printTreap(root, 0);
 
+    testing();
     return 0;
 }
